@@ -10,7 +10,8 @@
     ],
     "host_permissions": [
         "https://www.gov.uk/*",
-        "https://assets.publishing.service.gov.uk/*"
+        "https://assets.publishing.service.gov.uk/*",
+        "https://raw.githubusercontent.com/*"
     ],
     "background": {
         "service_worker": "background.js"

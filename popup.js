@@ -53,7 +53,59 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    // Fetch Remote Ads
+    fetchAd();
 });
+
+const ADS_URL = 'https://raw.githubusercontent.com/yitzuliu/UK-Visa-Sponsor-Highlighter/main/ads.json';
+
+function fetchAd() {
+    fetch(ADS_URL)
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(data => {
+            if (data && data.enabled) {
+                renderAd(data);
+            }
+        })
+        .catch(error => {
+            console.log('Failed to fetch ad, using default.', error);
+            // Default is already in HTML, so do nothing.
+        });
+}
+
+function renderAd(ad) {
+    const container = document.querySelector('.ad-container');
+    if (!container) return;
+
+    // Update Header
+    const adText = container.querySelector('.ad-text');
+    if (adText) adText.textContent = ad.text;
+
+    // Update Content
+    const adContent = container.querySelector('.ad-content');
+    if (adContent) {
+        adContent.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <!-- Icon -->
+                <img src="${escapeHtml(ad.icon)}" style="width: 32px; height: 32px; border-radius: 6px; object-fit: cover;" alt="Ad Icon">
+                
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <a href="${escapeHtml(ad.link)}" target="_blank" style="color: #333; font-weight: bold; text-decoration: none;">
+                        ${escapeHtml(ad.title)}
+                    </a>
+                    <span style="font-size: 11px; color: #666;">
+                        ${ad.footer ? escapeHtml(ad.footer) : ''}
+                        ${ad.footerLink ? `<a href="${escapeHtml(ad.footerLink)}" target="_blank" style="color: #0077b5; text-decoration: none;">🔗</a>` : ''}
+                    </span>
+                </div>
+            </div>
+        `;
+    }
+}
 
 function updateStatus() {
     chrome.storage.local.get(['lastUpdated', 'totalCount'], (result) => {

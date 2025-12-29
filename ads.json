@@ -1,0 +1,10 @@
+{
+    "enabled": true,
+    "id": "default-opensource",
+    "text": "Open Source Project",
+    "icon": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
+    "title": "Star on GitHub ★",
+    "link": "https://github.com/yitzuliu/UK-Visa-Sponsor-Highlighter",
+    "footer": "Created by @yitzuliu",
+    "footerLink": "https://github.com/yitzuliu"
+}
