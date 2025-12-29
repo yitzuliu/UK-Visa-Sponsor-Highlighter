@@ -42,6 +42,23 @@ A Chrome Extension that helps UK job seekers by automatically highlighting compa
     *   `gov.uk`: To fetch the official CSV.
     *   `linkedin.com` & `indeed.com`: To display the checkmarks on job listings.
 
+## 🌟 Sponsorship & Recommendations
+
+The extension features a **Native Recommendation Slot** at the bottom of the popup. This space is designed to be:
+*   **Non-intrusive**: It looks like a natural part of the UI.
+*   **Safe**: No external scripts or tracking pixels by default.
+*   **Useful**: Intended for high-quality recommendations relevant to job seekers (e.g., CV review services, interview coaching).
+
+### Default State
+By default, this slot displays information about the **Open Source** nature of this project, linking to the GitHub repository and the author's profile.
+
+### Customization
+To feature a sponsor or recommendation:
+1.  Open `popup.html`.
+2.  Locate the `<div class="ad-container">` section.
+3.  Update the content to match your sponsor's details (Icon, Title, Link).
+    *   *Tip: Keep the design consistent with the existing UI for the best user experience.*
+
 ## 🤝 Contributing
 
 Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
