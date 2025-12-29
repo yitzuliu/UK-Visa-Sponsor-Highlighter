@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>UK Visa Sponsor Check</title>
+    <link rel="stylesheet" type="text/css" href="popup.css">
+</head>
+
+<body>
+    <div class="container">
+        <h2>UK Visa Sponsor Check</h2>
+
+        <div class="status-box">
+            <p><strong>Total Sponsors:</strong> <span id="total-count">Loading...</span></p>
+            <p><strong>Last Updated:</strong> <span id="last-updated">Loading...</span></p>
+        </div>
+
+        <div class="controls">
+            <button id="update-btn">Force Update Now</button>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="search-input" placeholder="Check a specific company...">
+            <div id="search-result"></div>
+        </div>
+
+        <div class="ad-container">
+            <p class="ad-text">Sponsored</p>
+            <div class="ad-content">
+                <!-- Ad Network Code or Static Banner Here -->
+                <a href="#" target="_blank" style="text-decoration: none; color: #555;">
+                    Your Ad Here
+                </a>
+            </div>
+        </div>
+    </div>
+    <script src="utils.js"></script>
+    <script src="popup.js"></script>
+</body>
+
+</html>

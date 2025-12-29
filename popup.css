@@ -1,0 +1,100 @@
+body {
+    width: 300px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 10px;
+    background-color: #f9f9f9;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+h2 {
+    margin: 0;
+    color: #333;
+    font-size: 18px;
+    text-align: center;
+}
+
+.status-box {
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-size: 13px;
+}
+
+.status-box p {
+    margin: 5px 0;
+}
+
+button {
+    width: 100%;
+    padding: 8px;
+    background-color: #0077b5;
+    /* LinkedIn Blue-ish */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    background-color: #005e93;
+}
+
+.search-box {
+    margin-top: 10px;
+}
+
+#search-input {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#search-result {
+    margin-top: 5px;
+    font-size: 13px;
+    min-height: 20px;
+}
+
+.is-sponsor {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+.not-sponsor {
+    color: #F44336;
+    font-weight: bold;
+}
+
+.ad-container {
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #f0f0f0;
+    border: 1px dashed #ccc;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.ad-text {
+    font-size: 10px;
+    color: #888;
+    margin: 0 0 5px 0;
+    text-transform: uppercase;
+}
+
+.ad-content {
+    font-size: 12px;
+    color: #555;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
