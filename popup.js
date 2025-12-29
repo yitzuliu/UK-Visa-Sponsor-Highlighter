@@ -42,7 +42,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const sponsorSet = new Set(result.sponsors);
 
                 if (sponsorSet.has(normalizedQuery)) {
-                    document.getElementById('search-result').innerHTML = '<span class="is-sponsor">✓ Licensed Sponsor</span>';
+                    // Since we only store normalized names in the set, we can't easily retrieve the original name 
+                    // unless we store a map. But for now, let's just show the query the user typed (or title case it).
+                    // Ideally we would store Map<Normalized, Original> but that doubles memory.
+                    // Let's just show the user's query with the checkmark.
+                    document.getElementById('search-result').innerHTML = `<span class="is-sponsor">✓ <b>${escapeHtml(query)}</b> is a Licensed Sponsor</span>`;
                 } else {
                     document.getElementById('search-result').innerHTML = '<span class="not-sponsor">✗ Not found in list</span>';
                 }
