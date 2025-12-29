@@ -8,7 +8,7 @@ chrome.storage.local.get(['sponsors'], (result) => {
     if (result.sponsors) {
         sponsorSet = new Set(result.sponsors);
         isDataLoaded = true;
-        console.log('Sponsor data loaded in content script:', sponsorSet.size);
+        // console.log('Sponsor data loaded in content script:', sponsorSet.size);
         // Initial run
         runCheck();
     } else {

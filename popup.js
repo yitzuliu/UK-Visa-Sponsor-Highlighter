@@ -115,24 +115,64 @@ function renderAd(ad) {
     if (adText) adText.textContent = ad.text;
 
     // Update Content
+    // Update Content
     const adContent = container.querySelector('.ad-content');
     if (adContent) {
-        adContent.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <!-- Icon -->
-                <img src="${escapeHtml(ad.icon)}" style="width: 32px; height: 32px; border-radius: 6px; object-fit: cover;" alt="Ad Icon">
-                
-                <div style="display: flex; flex-direction: column; gap: 2px;">
-                    <a href="${escapeHtml(ad.link)}" target="_blank" style="color: #333; font-weight: bold; text-decoration: none;">
-                        ${escapeHtml(ad.title)}
-                    </a>
-                    <span style="font-size: 11px; color: #666;">
-                        ${ad.footer ? escapeHtml(ad.footer) : ''}
-                        ${ad.footerLink ? `<a href="${escapeHtml(ad.footerLink)}" target="_blank" style="color: #0077b5; text-decoration: none;">🔗</a>` : ''}
-                    </span>
-                </div>
-            </div>
-        `;
+        adContent.textContent = ''; // Clear existing content
+
+        const wrapper = document.createElement('div');
+        wrapper.style.display = 'flex';
+        wrapper.style.alignItems = 'center';
+        wrapper.style.gap = '10px';
+
+        // Icon
+        const iconImg = document.createElement('img');
+        iconImg.src = ad.icon;
+        iconImg.style.width = '32px';
+        iconImg.style.height = '32px';
+        iconImg.style.borderRadius = '6px';
+        iconImg.style.objectFit = 'cover';
+        iconImg.alt = 'Ad Icon';
+        wrapper.appendChild(iconImg);
+
+        // Text Container
+        const textDiv = document.createElement('div');
+        textDiv.style.display = 'flex';
+        textDiv.style.flexDirection = 'column';
+        textDiv.style.gap = '2px';
+
+        // Title Link
+        const titleLink = document.createElement('a');
+        titleLink.href = ad.link;
+        titleLink.target = '_blank';
+        titleLink.style.color = '#333';
+        titleLink.style.fontWeight = 'bold';
+        titleLink.style.textDecoration = 'none';
+        titleLink.textContent = ad.title;
+        textDiv.appendChild(titleLink);
+
+        // Footer
+        const footerSpan = document.createElement('span');
+        footerSpan.style.fontSize = '11px';
+        footerSpan.style.color = '#666';
+
+        if (ad.footer) {
+            footerSpan.textContent = ad.footer + ' ';
+        }
+
+        if (ad.footerLink) {
+            const footerLink = document.createElement('a');
+            footerLink.href = ad.footerLink;
+            footerLink.target = '_blank';
+            footerLink.style.color = '#0077b5';
+            footerLink.style.textDecoration = 'none';
+            footerLink.textContent = '🔗';
+            footerSpan.appendChild(footerLink);
+        }
+
+        textDiv.appendChild(footerSpan);
+        wrapper.appendChild(textDiv);
+        adContent.appendChild(wrapper);
     }
 }
 
