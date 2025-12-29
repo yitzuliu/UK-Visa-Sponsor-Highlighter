@@ -2,3 +2,9 @@
 *.log
 node_modules/
 test_logic.js
+
+# Build Artifacts
+*.zip
+
+# Private Documentation
+STORE_SUBMISSION_GUIDE.md

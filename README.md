@@ -52,12 +52,13 @@ The extension features a **Native Recommendation Slot** at the bottom of the pop
 ### Default State
 By default, this slot displays information about the **Open Source** nature of this project, linking to the GitHub repository and the author's profile.
 
-### Customization
-To feature a sponsor or recommendation:
-1.  Open `popup.html`.
-2.  Locate the `<div class="ad-container">` section.
-3.  Update the content to match your sponsor's details (Icon, Title, Link).
-    *   *Tip: Keep the design consistent with the existing UI for the best user experience.*
+### For Developers & Maintainers
+As the extension owner, you can utilize this slot to feature:
+*   **Premium Services**: CV reviews, visa consultation.
+*   **Sponsors**: Partners who support the project.
+*   **Community**: Links to Discord or other communities.
+
+*Note: This content is static and controlled by the extension update. End-users cannot modify this slot.*
 
 ## 🤝 Contributing
 
