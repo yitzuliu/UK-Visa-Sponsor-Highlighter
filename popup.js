@@ -1,6 +1,35 @@
 document.addEventListener('DOMContentLoaded', () => {
     updateStatus();
 
+    const toggle = document.getElementById('enable-toggle');
+    const toggleLabel = document.getElementById('toggle-label');
+
+    // Load initial state
+    chrome.storage.local.get(['isEnabled'], (result) => {
+        // Default to true if undefined
+        const isEnabled = result.isEnabled !== false;
+        toggle.checked = isEnabled;
+        updateToggleLabel(isEnabled);
+    });
+
+    toggle.addEventListener('change', () => {
+        const isEnabled = toggle.checked;
+        chrome.storage.local.set({ isEnabled: isEnabled }, () => {
+            updateToggleLabel(isEnabled);
+            // Notify content script to reload or update
+            chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+                if (tabs[0]) {
+                    chrome.tabs.sendMessage(tabs[0].id, { action: "toggleState", isEnabled: isEnabled });
+                }
+            });
+        });
+    });
+
+    function updateToggleLabel(enabled) {
+        toggleLabel.textContent = enabled ? 'Extension Enabled' : 'Extension Disabled';
+        toggleLabel.style.color = enabled ? '#4CAF50' : '#666';
+    }
+
     document.getElementById('update-btn').addEventListener('click', () => {
         const btn = document.getElementById('update-btn');
         btn.textContent = 'Updating...';

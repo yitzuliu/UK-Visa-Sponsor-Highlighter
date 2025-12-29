@@ -30,22 +30,52 @@ chrome.storage.local.get(['sponsors'], (result) => {
 
 // Listen for storage changes
 chrome.storage.onChanged.addListener((changes, namespace) => {
-    if (namespace === 'local' && changes.sponsors) {
-        sponsorSet = new Set(changes.sponsors.newValue);
-        isDataLoaded = true;
-        runCheck();
+    if (namespace === 'local') {
+        if (changes.sponsors) {
+            sponsorSet = new Set(changes.sponsors.newValue);
+            isDataLoaded = true;
+            runCheck();
+        }
+        if (changes.isEnabled) {
+            if (changes.isEnabled.newValue) {
+                runCheck();
+            } else {
+                removeCheckmarks();
+            }
+        }
+    }
+});
+
+// Listen for toggle message from popup
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "toggleState") {
+        if (request.isEnabled) {
+            runCheck();
+        } else {
+            removeCheckmarks();
+        }
     }
 });
 
 function runCheck() {
     if (!isDataLoaded) return;
 
-    const hostname = window.location.hostname;
-    if (hostname.includes('linkedin.com')) {
-        checkLinkedIn();
-    } else if (hostname.includes('indeed.com')) {
-        checkIndeed();
-    }
+    // Check if enabled
+    chrome.storage.local.get(['isEnabled'], (result) => {
+        if (result.isEnabled === false) return; // Default is true
+
+        const hostname = window.location.hostname;
+        if (hostname.includes('linkedin.com')) {
+            checkLinkedIn();
+        } else if (hostname.includes('indeed.com')) {
+            checkIndeed();
+        }
+    });
+}
+
+function removeCheckmarks() {
+    document.querySelectorAll('.sponsor-checkmark').forEach(el => el.remove());
+    document.querySelectorAll('[data-sponsor-checked]').forEach(el => el.removeAttribute('data-sponsor-checked'));
 }
 
 // Observer for dynamic content
