@@ -2,18 +2,22 @@
 
 let sponsorSet = new Set();
 let isDataLoaded = false;
+let isEnabled = true; // Cache enabled state
 
 // Load data from storage on start
-chrome.storage.local.get(['sponsors'], (result) => {
+chrome.storage.local.get(['sponsors', 'isEnabled'], (result) => {
+    // Set enabled state immediately
+    if (result.isEnabled !== undefined) {
+        isEnabled = result.isEnabled;
+    }
+
     if (result.sponsors) {
         sponsorSet = new Set(result.sponsors);
         isDataLoaded = true;
-        // console.log('Sponsor data loaded in content script:', sponsorSet.size);
         // Initial run
         runCheck();
     } else {
         console.log('No sponsor data found in storage.');
-        // Maybe trigger update?
         chrome.runtime.sendMessage({ action: 'forceUpdate' }, (response) => {
             if (response && response.success) {
                 chrome.storage.local.get(['sponsors'], (res) => {
@@ -37,7 +41,8 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
             runCheck();
         }
         if (changes.isEnabled) {
-            if (changes.isEnabled.newValue) {
+            isEnabled = changes.isEnabled.newValue;
+            if (isEnabled) {
                 runCheck();
             } else {
                 removeCheckmarks();
@@ -49,7 +54,8 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 // Listen for toggle message from popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "toggleState") {
-        if (request.isEnabled) {
+        isEnabled = request.isEnabled;
+        if (isEnabled) {
             runCheck();
         } else {
             removeCheckmarks();
@@ -58,19 +64,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 function runCheck() {
+    // Synchronous checks first for performance
     if (!isDataLoaded) return;
+    if (!isEnabled) return;
 
-    // Check if enabled
-    chrome.storage.local.get(['isEnabled'], (result) => {
-        if (result.isEnabled === false) return; // Default is true
-
-        const hostname = window.location.hostname;
-        if (hostname.includes('linkedin.com')) {
-            checkLinkedIn();
-        } else if (hostname.includes('indeed.com')) {
-            checkIndeed();
-        }
-    });
+    const hostname = window.location.hostname;
+    if (hostname.includes('linkedin.com')) {
+        checkLinkedIn();
+    } else if (hostname.includes('indeed.com')) {
+        checkIndeed();
+    }
 }
 
 function removeCheckmarks() {
@@ -80,8 +83,9 @@ function removeCheckmarks() {
 
 // Observer for dynamic content
 const observer = new MutationObserver((mutations) => {
-    if (!isDataLoaded) return;
-    // Debounce or just run? For now just run, but maybe throttle if performance is bad.
+    if (!isDataLoaded || !isEnabled) return;
+    // Removed throttling to ensure responsiveness. 
+    // The performance bottleneck was the storage call, which is now fixed via caching.
     runCheck();
 });
 
@@ -91,13 +95,16 @@ observer.observe(document.body, {
 });
 
 function checkLinkedIn() {
-    // LinkedIn Job Cards (Search results)
-    // Selectors might change, need to be robust.
-    // Common selectors for company names in job cards:
-    // .job-card-container__primary-description
-    // .artdeco-entity-lockup__subtitle
+    // LinkedIn Job Cards (Search results & Details)
+    const selectors = [
+        '.job-card-container__primary-description', // Legacy/Mobile
+        '.artdeco-entity-lockup__subtitle', // Main list (Left sidebar)
+        '.job-details-jobs-unified-top-card__company-name', // Job Details (Right sidebar)
+        '.job-card-list__company-name', // Alternative list view
+        '.app-aware-link' // Sometimes company name is just a link
+    ];
 
-    const companyElements = document.querySelectorAll('.job-card-container__primary-description, .artdeco-entity-lockup__subtitle, .job-details-jobs-unified-top-card__company-name');
+    const companyElements = document.querySelectorAll(selectors.join(', '));
 
     companyElements.forEach(el => {
         processElement(el);
@@ -106,9 +113,6 @@ function checkLinkedIn() {
 
 function checkIndeed() {
     // Indeed company names
-    // .companyName
-    // [data-testid="company-name"]
-
     const companyElements = document.querySelectorAll('.companyName, [data-testid="company-name"]');
 
     companyElements.forEach(el => {
@@ -117,18 +121,30 @@ function checkIndeed() {
 }
 
 function processElement(el) {
-    if (el.hasAttribute('data-sponsor-checked')) return;
-
+    // Get text content, excluding our own badge if it exists
     const companyName = el.textContent.trim();
     if (!companyName) return;
 
     const normalized = normalizeCompanyName(companyName);
+    const isSponsor = sponsorSet.has(normalized);
+    const existingBadge = el.querySelector('.sponsor-checkmark');
 
-    if (sponsorSet.has(normalized)) {
-        addCheckmark(el);
+    if (isSponsor) {
+        if (!existingBadge) {
+            addCheckmark(el);
+        }
+        if (el.getAttribute('data-sponsor-checked') !== 'true') {
+            el.setAttribute('data-sponsor-checked', 'true');
+        }
+    } else {
+        // Handle reused nodes (Virtualization)
+        if (existingBadge) {
+            existingBadge.remove();
+        }
+        if (el.hasAttribute('data-sponsor-checked')) {
+            el.removeAttribute('data-sponsor-checked');
+        }
     }
-
-    el.setAttribute('data-sponsor-checked', 'true');
 }
 
 function addCheckmark(el) {
@@ -137,6 +153,8 @@ function addCheckmark(el) {
 
     const span = document.createElement('span');
     span.className = 'sponsor-checkmark';
+    // Reverted to innerHTML for simplicity and reliability. 
+    // The SVG string is hardcoded and safe.
     span.innerHTML = `
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-left: 4px;">
             <circle cx="12" cy="12" r="10" fill="#4CAF50"/>

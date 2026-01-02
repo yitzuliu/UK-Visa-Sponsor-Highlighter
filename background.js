@@ -21,11 +21,9 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 // Message listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'checkSponsor') {
-        // This might be too slow for bulk checking, better to let content script have the data
-        // or batch check. For now, let's assume content script loads data.
-        // Actually, passing the whole set to content script might be heavy (MBs).
-        // But chrome.storage.local.get is async.
-        // Let's implement a check here just in case, but primary method will be content script reading storage.
+        // Fallback/Legacy handler. 
+        // Primary checking happens in content.js (bulk) or popup.js (direct storage access).
+        // Kept for potential future use or external calls.
         checkSponsor(request.companyName).then(isSponsor => sendResponse({ isSponsor }));
         return true; // Keep channel open
     } else if (request.action === 'forceUpdate') {
