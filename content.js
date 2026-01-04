@@ -82,12 +82,24 @@ function removeCheckmarks() {
 }
 
 // Observer for dynamic content
-const observer = new MutationObserver((mutations) => {
+// Debounce function to limit execution frequency
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Observer for dynamic content
+const observer = new MutationObserver(debounce((mutations) => {
     if (!isDataLoaded || !isEnabled) return;
-    // Removed throttling to ensure responsiveness. 
-    // The performance bottleneck was the storage call, which is now fixed via caching.
     runCheck();
-});
+}, 250)); // Wait 250ms after last mutation to run check
 
 observer.observe(document.body, {
     childList: true,
@@ -99,7 +111,8 @@ function checkLinkedIn() {
     const selectors = [
         '.job-card-container__primary-description', // Legacy/Mobile
         '.artdeco-entity-lockup__subtitle', // Main list (Left sidebar)
-        '.job-details-jobs-unified-top-card__company-name', // Job Details (Right sidebar)
+        '.job-details-jobs-unified-top-card__company-name a', // Job Details (Right sidebar) - Target link directly
+        '.job-details-jobs-unified-top-card__company-name:not(:has(a))', // Fallback if no link
         '.job-card-list__company-name', // Alternative list view
         '.app-aware-link' // Sometimes company name is just a link
     ];
