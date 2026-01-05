@@ -8,8 +8,14 @@ const testCases = [
         expected: true
     },
     {
-        name: "Lloyds Bank Match",
+        name: "Lloyds Bank Match (Standard)",
         site: "lloydsbankGroup",
+        db: "Lloyds Bank plc",
+        expected: true
+    },
+    {
+        name: "Lloyds Banking Group Match (New Case)",
+        site: "Lloyds Banking Group",
         db: "Lloyds Bank plc",
         expected: true
     },

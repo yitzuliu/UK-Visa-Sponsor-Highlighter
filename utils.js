@@ -17,12 +17,12 @@ const IGNORE_PATTERNS = [
     ' solutions', ' technologies', ' labs', ' partners', ' uk', ' (uk)',
 
     // Banking specific (Spaced)
-    ' bank', ' national association', ' n.a.', ' trust',
+    ' banking', ' bank', ' national association', ' n.a.', ' trust',
 
     // --- Attached Variants (No leading space) ---
     // CAUTION: Only add if unique enough to not break real words
     // 'group' -> removal is safe if we strip recursively from end
-    'group', 'holdings', 'limited', 'ltd', 'plc', 'llp', 'inc', 'corp', 'bank'
+    'group', 'holdings', 'limited', 'ltd', 'plc', 'llp', 'inc', 'corp', 'bank', 'banking'
 ];
 
 // Domains to strip
