@@ -1,0 +1,12 @@
+Version 1.1.0 Release Notes
+
+Summary:
+Major improvement to company name matching logic to handle complex variations and suffixes.
+
+Changes:
+- Implemented "Core Identity" matching engine.
+- Fixed specific issues where valid sponsors were not highlighted due to name formatting differences (e.g., "JPMorgan Chase Bank" vs "JPMorganChase").
+- Added support for detecting companies even with extra suffixes like "Group", "Bank", "International", etc.
+- Added support for stripping domain extensions (e.g., "Expedia.com Ltd" matches "Expedia Group").
+- Improved handling of "Trading As" (t/as) names.
+- Optimization: Recursive suffix removal ensures significantly higher match rates on LinkedIn and Indeed.
