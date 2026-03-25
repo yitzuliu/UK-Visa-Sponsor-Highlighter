@@ -8,10 +8,12 @@ const testCases = [
         expected: true
     },
     {
-        name: "Lloyds Bank Match (Standard)",
+        name: "Lloyds Bank Match (Attached Bank)",
         site: "lloydsbankGroup",
         db: "Lloyds Bank plc",
-        expected: true
+        expected: false
+        // With word boundary enforcement, 'lloydsbank' !== 'lloyds'.
+        // This is the intended trade-off to protect names like 'Softbank'.
     },
     {
         name: "Lloyds Banking Group Match (New Case)",
@@ -32,13 +34,12 @@ const testCases = [
         expected: true
     },
     {
-        name: "Softbank Safety Check (Logic Consistency)",
-        site: "Soft",
+        name: "Softbank Accuracy Check",
+        site: "Softbank",
         db: "SoftBank Group",
         expected: true
-        // Logic Result: 'SoftBank Group' -> 'soft'. 'Soft' -> 'soft'. Match = TRUE.
-        // Safety Note: This is acceptable because we verified 'Soft' does NOT exist in the official DB.
-        // If it did, this would be a collision, but for now it ensures logical consistency with 'Zopa'.
+        // Logic Result: 'SoftBank Group' -> 'softbank'. 'Softbank' -> 'softbank'. Match = TRUE.
+        // Ensures 'bank' is not mistakenly dropped from inside a word.
     },
     {
         name: "Standard Match",

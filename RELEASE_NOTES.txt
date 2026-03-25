@@ -1,3 +1,15 @@
+Version 1.2.0 Release Notes
+
+Summary:
+Major architectural overhaul to improve performance, data freshness, and matching accuracy.
+
+Changes:
+- Dynamic Data Fetching: The extension now dynamically parses GOV.UK to always download the latest CSV, rather than relying on a hardcoded URL.
+- Frequent Updates: Sync interval reduced from 30 days to 7 days.
+- Performance Architecture: Introduced Background Service Worker caching. The sponsor list is now held centrally in memory, and content scripts batch-query the background. This drastically reduces the memory footprint of individual LinkedIn/Indeed tabs.
+- Accuracy Improvements: Rewrote the normalization engine (`utils.js`) to use RegExp word boundaries (`\b`). This prevents false-positive truncation (e.g., "Softbank" is no longer erroneously truncated to "Soft").
+- UI UX: Added a debounce and visual "Searching..." indicator to the popup search bar.
+
 Version 1.1.0 Release Notes
 
 Summary:

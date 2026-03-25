@@ -7,8 +7,9 @@ A Chrome Extension that helps UK job seekers by automatically highlighting compa
 ## 🚀 Features
 
 *   **Automatic Highlighting**: Displays a green checkmark ✅ next to companies that are on the official UK Home Office Sponsor List.
-*   **Real-time Sync**: Fetches the latest data directly from GOV.UK (updates automatically every 30 days).
-*   **Smart Matching**: Uses intelligent name normalization to match companies even if the names vary slightly (e.g., "Google UK Ltd" vs "Google").
+*   **Real-time Sync**: Dynamically fetches the latest data directly from GOV.UK (updates automatically every 7 days).
+*   **Smart Matching**: Uses intelligent regex-based name normalization with word boundaries to match companies with high accuracy (e.g., "Google UK Ltd" vs "Google").
+*   **Performance Optimized**: Uses background service worker caching to ensure fast page loads with minimal memory footprint.
 *   **Popup Dashboard**:
     *   View total number of licensed sponsors.
     *   Check when the data was last updated.
@@ -30,9 +31,9 @@ A Chrome Extension that helps UK job seekers by automatically highlighting compa
 
 ## 🛠️ How it Works
 
-1.  **Data Fetching**: The extension downloads the official "Register of Worker and Temporary Worker licensed sponsors" CSV from the [UK Government website](https://www.gov.uk/government/publications/register-of-licensed-sponsors-workers).
-2.  **Storage**: The list is parsed and stored locally in your browser (`chrome.storage.local`).
-3.  **Matching**: When you browse LinkedIn or Indeed, the extension scans for company names and checks them against the local database.
+1.  **Data Fetching**: The extension dynamically locates and downloads the official "Register of Worker and Temporary Worker licensed sponsors" CSV from the [UK Government website](https://www.gov.uk/government/publications/register-of-licensed-sponsors-workers).
+2.  **Storage & Cache**: The parsed list is stored in `chrome.storage.local` and cached in the Background Service Worker's memory. This prevents individual web pages from bloating your browser's RAM.
+3.  **Matching**: When you browse LinkedIn or Indeed, the extension collects visible company names and queries the background script to check them against the official list without slowing down the page rendering.
 
 ## 🔒 Privacy & Permissions
 

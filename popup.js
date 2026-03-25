@@ -54,33 +54,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const searchInput = document.getElementById('search-input');
+    
+    // Add simple debounce for search
+    let searchTimeout;
     searchInput.addEventListener('input', (e) => {
-        const query = e.target.value;
+        const query = e.target.value.trim();
+        
+        clearTimeout(searchTimeout);
         if (query.length < 2) {
             document.getElementById('search-result').textContent = '';
             return;
         }
 
-        // We need to access the data. 
-        // Since popup is separate, we can read storage directly.
-        chrome.storage.local.get(['sponsors'], (result) => {
-            if (result.sponsors) {
-                const normalizedQuery = normalizeCompanyName(query);
-                // Exact match on normalized name for now, or check if set has it.
-                // The set contains normalized names.
-                const sponsorSet = new Set(result.sponsors);
+        document.getElementById('search-result').innerHTML = '<span style="color: #666;">Searching...</span>';
 
-                if (sponsorSet.has(normalizedQuery)) {
-                    // Since we only store normalized names in the set, we can't easily retrieve the original name 
-                    // unless we store a map. But for now, let's just show the query the user typed (or title case it).
-                    // Ideally we would store Map<Normalized, Original> but that doubles memory.
-                    // Let's just show the user's query with the checkmark.
+        searchTimeout = setTimeout(() => {
+            chrome.runtime.sendMessage({ action: 'checkSponsor', companyName: query }, (response) => {
+                if (response && response.isSponsor) {
                     document.getElementById('search-result').innerHTML = `<span class="is-sponsor">✓ <b>${escapeHtml(query)}</b> is a Licensed Sponsor</span>`;
                 } else {
                     document.getElementById('search-result').innerHTML = '<span class="not-sponsor">✗ Not found in list</span>';
                 }
-            }
-        });
+            });
+        }, 300);
     });
 
     // Fetch Remote Ads

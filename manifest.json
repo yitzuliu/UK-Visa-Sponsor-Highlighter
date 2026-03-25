@@ -24,7 +24,6 @@
                 "*://uk.indeed.com/*"
             ],
             "js": [
-                "utils.js",
                 "content.js"
             ],
             "css": [

@@ -1,57 +1,43 @@
 // content.js
+let isEnabled = true;
 
-let sponsorSet = new Set();
-let isDataLoaded = false;
-let isEnabled = true; // Cache enabled state
+// --- Platform Configurations (OCP & SRP) ---
+// By moving selectors out of the main logic, we make it easy to add new platforms
+// without modifying the core matching and UI injection logic.
+const PlatformStrategies = {
+    'linkedin.com': [
+        '.job-card-container__primary-description',
+        '.artdeco-entity-lockup__subtitle',
+        '.job-details-jobs-unified-top-card__company-name a',
+        '.job-details-jobs-unified-top-card__company-name:not(:has(a))',
+        '.job-card-list__company-name',
+        '.app-aware-link'
+    ],
+    'indeed.com': [
+        '.companyName',
+        '[data-testid="company-name"]'
+    ]
+};
 
-// Load data from storage on start
-chrome.storage.local.get(['sponsors', 'isEnabled'], (result) => {
-    // Set enabled state immediately
+// --- Initialization ---
+chrome.storage.local.get(['isEnabled'], (result) => {
     if (result.isEnabled !== undefined) {
         isEnabled = result.isEnabled;
     }
-
-    if (result.sponsors) {
-        sponsorSet = new Set(result.sponsors);
-        isDataLoaded = true;
-        // Initial run
-        runCheck();
-    } else {
-        console.log('No sponsor data found in storage.');
-        chrome.runtime.sendMessage({ action: 'forceUpdate' }, (response) => {
-            if (response && response.success) {
-                chrome.storage.local.get(['sponsors'], (res) => {
-                    if (res.sponsors) {
-                        sponsorSet = new Set(res.sponsors);
-                        isDataLoaded = true;
-                        runCheck();
-                    }
-                });
-            }
-        });
-    }
+    if (isEnabled) runCheck();
 });
 
-// Listen for storage changes
 chrome.storage.onChanged.addListener((changes, namespace) => {
-    if (namespace === 'local') {
-        if (changes.sponsors) {
-            sponsorSet = new Set(changes.sponsors.newValue);
-            isDataLoaded = true;
+    if (namespace === 'local' && changes.isEnabled) {
+        isEnabled = changes.isEnabled.newValue;
+        if (isEnabled) {
             runCheck();
-        }
-        if (changes.isEnabled) {
-            isEnabled = changes.isEnabled.newValue;
-            if (isEnabled) {
-                runCheck();
-            } else {
-                removeCheckmarks();
-            }
+        } else {
+            removeCheckmarks();
         }
     }
 });
 
-// Listen for toggle message from popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "toggleState") {
         isEnabled = request.isEnabled;
@@ -63,26 +49,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 });
 
-function runCheck() {
-    // Synchronous checks first for performance
-    if (!isDataLoaded) return;
-    if (!isEnabled) return;
-
-    const hostname = window.location.hostname;
-    if (hostname.includes('linkedin.com')) {
-        checkLinkedIn();
-    } else if (hostname.includes('indeed.com')) {
-        checkIndeed();
-    }
-}
-
-function removeCheckmarks() {
-    document.querySelectorAll('.sponsor-checkmark').forEach(el => el.remove());
-    document.querySelectorAll('[data-sponsor-checked]').forEach(el => el.removeAttribute('data-sponsor-checked'));
-}
-
-// Observer for dynamic content
-// Debounce function to limit execution frequency
+// --- Observers ---
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -95,65 +62,75 @@ function debounce(func, wait) {
     };
 }
 
-// Observer for dynamic content
 const observer = new MutationObserver(debounce((mutations) => {
-    if (!isDataLoaded || !isEnabled) return;
+    if (!isEnabled) return;
     runCheck();
-}, 250)); // Wait 250ms after last mutation to run check
+}, 250));
 
 observer.observe(document.body, {
     childList: true,
     subtree: true
 });
 
-function checkLinkedIn() {
-    // LinkedIn Job Cards (Search results & Details)
-    const selectors = [
-        '.job-card-container__primary-description', // Legacy/Mobile
-        '.artdeco-entity-lockup__subtitle', // Main list (Left sidebar)
-        '.job-details-jobs-unified-top-card__company-name a', // Job Details (Right sidebar) - Target link directly
-        '.job-details-jobs-unified-top-card__company-name:not(:has(a))', // Fallback if no link
-        '.job-card-list__company-name', // Alternative list view
-        '.app-aware-link' // Sometimes company name is just a link
-    ];
-
-    const companyElements = document.querySelectorAll(selectors.join(', '));
-
-    companyElements.forEach(el => {
-        processElement(el);
-    });
-}
-
-function checkIndeed() {
-    // Indeed company names
-    const companyElements = document.querySelectorAll('.companyName, [data-testid="company-name"]');
-
-    companyElements.forEach(el => {
-        processElement(el);
-    });
-}
-
-function processElement(el) {
-    // Get text content, excluding our own badge if it exists
-    const companyName = el.textContent.trim();
-    if (!companyName) return;
-
-    const normalized = normalizeCompanyName(companyName);
-    const isSponsor = sponsorSet.has(normalized);
-    const existingBadge = el.querySelector('.sponsor-checkmark');
-
-    if (isSponsor) {
-        if (!existingBadge) {
-            addCheckmark(el);
+// --- Core Logic ---
+function getPlatformSelectors() {
+    const hostname = window.location.hostname;
+    for (const [domain, selectors] of Object.entries(PlatformStrategies)) {
+        if (hostname.includes(domain)) {
+            return selectors.join(', ');
         }
+    }
+    return null;
+}
+
+function runCheck() {
+    if (!isEnabled) return;
+
+    const selectorStr = getPlatformSelectors();
+    if (!selectorStr) return;
+
+    const companyElements = Array.from(document.querySelectorAll(selectorStr));
+    if (companyElements.length === 0) return;
+
+    const nameMap = new Map();
+    const uniqueNamesToFetch = [];
+
+    companyElements.forEach(el => {
+        const cleanName = el.textContent.trim();
+        if (!cleanName) return;
+
+        if (!nameMap.has(cleanName)) {
+            nameMap.set(cleanName, []);
+            uniqueNamesToFetch.push(cleanName);
+        }
+        nameMap.get(cleanName).push(el);
+    });
+
+    if (uniqueNamesToFetch.length === 0) return;
+
+    chrome.runtime.sendMessage({ action: 'checkBatchSponsors', companies: uniqueNamesToFetch }, (response) => {
+        if (!response || !response.results) return;
+
+        for (const [name, isSponsor] of Object.entries(response.results)) {
+            const elements = nameMap.get(name);
+            if (!elements) continue;
+
+            elements.forEach(el => updateElementUI(el, isSponsor));
+        }
+    });
+}
+
+// --- UI Manipulation (SRP) ---
+function updateElementUI(el, isSponsor) {
+    const existingBadge = el.querySelector('.sponsor-checkmark');
+    
+    if (isSponsor) {
+        if (!existingBadge) addCheckmark(el);
         if (el.getAttribute('data-sponsor-checked') !== 'true') {
             el.setAttribute('data-sponsor-checked', 'true');
         }
     } else {
-        // Handle reused nodes (Virtualization)
-        if (existingBadge) {
-            existingBadge.remove();
-        }
+        if (existingBadge) existingBadge.remove();
         if (el.hasAttribute('data-sponsor-checked')) {
             el.removeAttribute('data-sponsor-checked');
         }
@@ -161,13 +138,8 @@ function processElement(el) {
 }
 
 function addCheckmark(el) {
-    // Avoid double injection
-    if (el.querySelector('.sponsor-checkmark')) return;
-
     const span = document.createElement('span');
     span.className = 'sponsor-checkmark';
-    // Reverted to innerHTML for simplicity and reliability. 
-    // The SVG string is hardcoded and safe.
     span.innerHTML = `
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-left: 4px;">
             <circle cx="12" cy="12" r="10" fill="#4CAF50"/>
@@ -176,4 +148,9 @@ function addCheckmark(el) {
     `;
     span.title = 'Licensed Sponsor confirmed by GOV.UK';
     el.appendChild(span);
+}
+
+function removeCheckmarks() {
+    document.querySelectorAll('.sponsor-checkmark').forEach(el => el.remove());
+    document.querySelectorAll('[data-sponsor-checked]').forEach(el => el.removeAttribute('data-sponsor-checked'));
 }

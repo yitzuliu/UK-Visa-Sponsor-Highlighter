@@ -1,75 +1,44 @@
 // Shared utility functions
 
-// Comprehensive Suffix/Prefix/Noise List
-// Sorted by length DESC to ensure longest match removal first
-const IGNORE_PATTERNS = [
-    // Separators & Informational
-    ' trading as ', ' t/as ', ' t/a ', // Remove "trading as" and everything after, or just the phrase? 
-    // For now, let's treat them as noise to be stripped if they appear. 
-
-    // Legal Entities (Spaced)
-    ' public limited company', ' limited', ' limited.', ' ltd.', ' ltd', ' plc', ' p.l.c.',
-    ' llp', ' l.l.p.', ' inc.', ' inc', ' incorporated', ' corporation', ' corp.', ' corp',
-    ' gmbh', ' s.a.',
-
-    // Structural/Business Units (Spaced)
-    ' group', ' holdings', ' holding', ' international', ' global', ' systems', ' services',
-    ' solutions', ' technologies', ' labs', ' partners', ' uk', ' (uk)',
-
-    // Banking specific (Spaced)
-    ' banking', ' bank', ' national association', ' n.a.', ' trust',
-
-    // --- Attached Variants (No leading space) ---
-    // CAUTION: Only add if unique enough to not break real words
-    // 'group' -> removal is safe if we strip recursively from end
-    'group', 'holdings', 'limited', 'ltd', 'plc', 'llp', 'inc', 'corp', 'bank', 'banking'
-];
-
-// Domains to strip
 const DOMAINS = ['.com', '.co.uk', '.org.uk', '.net', '.io', '.ai', '.co'];
+
+// Build a regex pattern: match word boundary + suffix + word boundary at the end of string
+const END_SUFFIX_REGEX = new RegExp('\\b(' + [
+    'public limited company', 'limited', 'ltd', 'plc', 'p l c', 'l l p', 'llp',
+    'inc', 'incorporated', 'corporation', 'corp', 'gmbh', 's a',
+    'group', 'holdings', 'holding', 'international', 'global', 'systems', 'services',
+    'solutions', 'technologies', 'labs', 'partners', 'uk',
+    'banking', 'bank', 'national association', 'n a', 'trust'
+].join('|') + ')\\s*$', 'gi');
 
 function normalizeCompanyName(name) {
     if (!name) return '';
 
     let normalized = name.toLowerCase();
 
-    // 1. Domain Stripping
-    // Remove domain extensions anywhere in the string
+    // 1. Remove "trading as" noise early
+    normalized = normalized.split(/\b(trading as|t\/as|t\/a)\b/)[0];
+
+    // 2. Domain Stripping
     for (const domain of DOMAINS) {
         if (normalized.includes(domain)) {
             normalized = normalized.split(domain).join('');
         }
     }
 
-    // 2. Remove Punctuation
-    // Keep only letters, numbers, and spaces
-    normalized = normalized.replace(/[^\w\s]/g, "");
+    // 3. Remove Punctuation (replace with space to keep words distinct for boundary checks)
+    normalized = normalized.replace(/[^\w\s]/g, " ");
 
-    // 3. Recursive Suffix Removal
-    // We loop until the string stops changing
+    // 4. Recursive Suffix Removal (from the end)
     let changed = true;
     while (changed) {
-        changed = false;
-        // Trim before checking suffixes
-        normalized = normalized.trim();
-
-        for (const suffix of IGNORE_PATTERNS) {
-            // Check if it ends with this suffix
-            // We use endsWith, but we must be careful with short suffixes without spaces
-            // e.g. "Bank" removal from "Softbank" -> "Soft".
-
-            if (normalized.endsWith(suffix)) {
-                // Cut it off
-                normalized = normalized.slice(0, -suffix.length);
-                changed = true;
-                // Restart loop to find next suffix (e.g. was "BankGroup", now "Bank")
-                break;
-            }
-        }
+        let prev = normalized;
+        normalized = normalized.replace(END_SUFFIX_REGEX, '').trim();
+        changed = (prev !== normalized);
     }
 
-    // 4. Space Annihilation
-    // Remove ALL spaces
+    // 5. Space Annihilation
+    // Remove ALL spaces for the final strict match
     normalized = normalized.replace(/\s+/g, '');
 
     return normalized;
