@@ -1,6 +1,6 @@
 # Privacy Policy for UK Visa Sponsor High-lighter
 
-**Last Updated:** 2025-12-29
+**Last Updated:** 2026-03-25
 
 ## 1. Introduction
 "UK Visa Sponsor High-lighter" ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how our Chrome Extension collects, uses, and discloses information.
@@ -14,7 +14,7 @@
 ## 3. Permissions
 We request the minimum permissions necessary for the extension to function:
 *   `storage`: To cache the sponsor list locally.
-*   `alarms`: To schedule automatic updates of the sponsor list (every 30 days).
+*   `alarms`: To schedule automatic updates of the sponsor list (every 7 days).
 *   `Host Permissions` (LinkedIn, Indeed, GOV.UK): To read company names on job boards and fetch the official sponsor list.
 
 ## 4. Third-Party Services
